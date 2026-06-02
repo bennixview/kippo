@@ -73,6 +73,7 @@ Quellen: [Kipshoven – Wikipedia](https://de.wikipedia.org/wiki/Kipshoven),
 ## Mögliche Erweiterungen
 - Balance schärfen (frühe Jahre spannender, Kühe weniger stark)
 - Speicherstand (localStorage)
-- Soundeffekte / Chiptune
+- Mehr Soundeffekte (mittelalterliche Hintergrundmusik ist bereits an Bord —
+  per 🎵-Knopf in der Statusleiste stummschaltbar)
 - Mehr Ereignisse, Nachbardörfer (Gripekoven, Moorshoven, Beeck), Markt in Wegberg
 - Animationen (Mühlrad, Wolken, Tag/Nacht)

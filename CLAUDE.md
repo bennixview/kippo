@@ -22,7 +22,8 @@ There are no tests, linter, or CI.
 
 ## Architecture
 
-Three source files, loaded by `index.html` in order (`scene.js` before `game.js`):
+Source files loaded by `index.html` in order (`scene.js`, then `audio.js`, then
+`game.js`):
 
 - **`game.js`** — all game logic. A single global mutable state object `S`
   (created by `newGame()`) is the source of truth. Data-driven design: the
@@ -35,7 +36,17 @@ Three source files, loaded by `index.html` in order (`scene.js` before `game.js`
   resolution and is CSS-upscaled with `image-rendering: pixelated`. The `PAL`
   palette object holds every color. The main building drawn switches on
   `S.rankIndex` (0–5). It reads `S` but never mutates it.
-- **`style.css`** — retro C64/NES look, CRT scanlines, Press-Start-2P web font.
+- **`audio.js`** — background music, generated procedurally with the Web Audio
+  API (no audio files): a looping medieval melody in D-Dorian over a fifth drone.
+  Self-contained IIFE exposing `window.KippoMusik` (`start`, `toggle`,
+  `isEnabled`, `state`). Must be started from a user gesture (browser autoplay
+  policy) — `startGame()` calls `KippoMusik.start()` on the start-button click.
+  Mute state persists in `localStorage` under `kippo-musik`.
+- **`style.css`** — retro C64/NES look, CRT scanlines, and the Press-Start-2P
+  font. The font is **self-hosted** under `fonts/` (woff2 + OFL license) and
+  loaded via `@font-face` — deliberately **not** from the Google Fonts CDN, to
+  avoid transmitting visitor IPs to Google (German GDPR / "Abmahnung" risk). Do
+  not reintroduce external font/CDN links.
 
 `index.html` defines all DOM ids that `game.js` reads/writes — if you add a stat
 or input, wire up the matching id in both files.

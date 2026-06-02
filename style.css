@@ -114,6 +114,15 @@ hr{ border:none; border-top:2px dashed var(--frame); margin:12px 0; }
 }
 .stat{ white-space:nowrap; }
 .stat.coin{ margin-left:auto; color:var(--gold); }
+.music-toggle{
+  font-family:inherit; font-size:12px; line-height:1; cursor:pointer;
+  background:var(--panel); color:var(--ink);
+  border:3px solid var(--frame);
+  box-shadow:inset -2px -2px 0 var(--shadow), inset 2px 2px 0 var(--panel2);
+  padding:4px 6px;
+}
+.music-toggle:hover{ background:var(--panel2); }
+.music-toggle:active{ box-shadow:inset 2px 2px 0 var(--shadow); }
 
 /* ============ LAYOUT ============ */
 #main-layout{ display:flex; gap:12px; align-items:flex-start; }
