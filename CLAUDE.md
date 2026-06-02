@@ -56,7 +56,10 @@ Source files loaded by `index.html` in order (`scene.js`, then `audio.js`, then
   palette object holds every color. The main building drawn switches on
   `S.rankIndex` (0–5). It reads `S` but never mutates it.
 - **`audio.js`** — background music, generated procedurally with the Web Audio
-  API (no audio files): a looping medieval melody in D-Dorian over a fifth drone.
+  API (no audio files): a lively, cosy tavern/fantasy tune in D-major with a
+  bouncing oom-pah bass (square-wave, PC-speaker style). Two looping voices
+  (melody + bass) defined as `[note, beats]` sequences that both sum to 32 beats
+  so they stay in sync; a lookahead scheduler enqueues notes per voice.
   Self-contained IIFE exposing `window.KippoMusik` (`start`, `toggle`,
   `isEnabled`, `state`). Must be started from a user gesture (browser autoplay
   policy) — `startGame()` calls `KippoMusik.start()` on the start-button click.

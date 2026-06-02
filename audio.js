@@ -1,92 +1,102 @@
 /* ============================================================
    KIPPO — Hintergrundmusik
-   Eine kleine mittelalterliche Melodie, prozedural per Web Audio
-   API erzeugt (keine externen Audiodateien). Dorische Tonart über
-   einem Quint-Bordun (Dudelsack-/Drehleier-Anmutung), Chiptune-Klang
-   passend zur Pixel-Optik.
+   Eine fröhliche, "cosy" Tavernen-/Fantasy-Melodie, prozedural per
+   Web Audio API erzeugt (keine externen Audiodateien). D-Dur, flott
+   und tänzerisch, mit hüpfendem Oom-Pah-Bass statt Dauerbordun —
+   beepiger Square-Wave-Klang im PC-Speaker-Stil.
    ============================================================ */
 (function(){
   const STORE_KEY = 'kippo-musik';   // 'an' | 'aus' in localStorage
 
   let ctx       = null;   // AudioContext (erst nach Nutzergeste)
   let master    = null;   // Gesamt-Lautstärke (0 = stumm)
-  let melodyMix = null;   // Bus für die Melodiestimme
-  let droneNodes= [];     // dauerhaft klingender Bordun
   let schedTimer= null;   // Lookahead-Scheduler
-  let nextTime  = 0;      // Startzeit der nächsten Note (AudioContext-Uhr)
-  let step      = 0;      // Index in der Melodie
-  let running   = false;  // Scheduler aktiv?
+  let cursors   = [];     // pro Stimme: { i, t }
   let enabled   = (localStorage.getItem(STORE_KEY) !== 'aus'); // Default: an
 
-  /* ---- Tonhöhen (Hz) ---- D-dorisch + Bordun-Töne ---- */
+  /* ---- Tonhöhen (Hz) ---- D-Dur + Bass ---- */
   const F = {
-    R:0,                         // Pause
-    D3:146.83, A3:220.00,        // Bordun (Quinte)
-    D4:293.66, E4:329.63, F4:349.23, G4:392.00,
-    A4:440.00, B4:493.88, C5:523.25, D5:587.33,
+    R:0,
+    // Bass
+    A2:110.00, D3:146.83, E3:164.81, 'F#3':185.00, G3:196.00, A3:220.00,
+    // Melodie
+    D4:293.66, E4:329.63, 'F#4':369.99, G4:392.00, A4:440.00, B4:493.88,
+    'C#5':554.37, D5:587.33, E5:659.25,
   };
 
-  const TEMPO = 100;             // Schläge je Minute
+  const TEMPO = 150;             // Schläge je Minute (flott, tänzerisch)
   const SPB   = 60 / TEMPO;      // Sekunden je Schlag (Viertel)
 
-  /* ---- Melodie: [Ton, Schläge] ---- zwei Phrasen (A, B) ----
-     Modal, schreitend, mit kleinen Verzierungen — klingt nach
-     Estampie/Tanz des 14. Jh. */
+  /* ---- Melodie [Ton, Schläge] ---- Achtel = 0.5 ----
+     A-Teil (Takt 1-4: D G A D) + B-Teil (Takt 5-8, etwas höher). */
   const MELODY = [
-    // Phrase A
-    ['A4',1],['A4',1],['G4',1],['F4',1],
-    ['G4',1],['A4',2],['D4',1],
-    ['F4',1],['G4',1],['A4',1],['B4',1],
-    ['A4',1],['G4',2],['R',1],
-    // Phrase B
-    ['D5',1],['C5',1],['B4',1],['A4',1],
-    ['G4',1],['A4',2],['F4',1],
-    ['E4',1],['F4',1],['G4',1],['E4',1],
-    ['D4',2],['R',1],['R',1],
+    // A-Teil
+    ['A4',.5],['B4',.5],['A4',.5],['F#4',.5],['D4',1],['A4',1],        // D
+    ['B4',.5],['C#5',.5],['B4',.5],['A4',.5],['G4',1],['B4',1],        // G
+    ['A4',.5],['B4',.5],['C#5',.5],['A4',.5],['E4',1],['A4',1],        // A
+    ['F#4',.5],['A4',.5],['F#4',.5],['E4',.5],['D4',2],                // D
+    // B-Teil
+    ['D5',.5],['C#5',.5],['B4',.5],['C#5',.5],['D5',1],['A4',1],       // D
+    ['B4',.5],['C#5',.5],['D5',.5],['B4',.5],['G4',1],['G4',1],        // G
+    ['A4',.5],['B4',.5],['C#5',.5],['E5',.5],['A4',1],['C#5',1],       // A
+    ['D5',.5],['C#5',.5],['B4',.5],['A4',.5],['D5',2],                 // D
   ];
 
-  /* ---- eine Melodienote planen ---- */
-  function scheduleNote(name, time, dur){
+  /* ---- Bass [Ton, Schläge] ---- Oom-Pah: Grundton/Quinte im Wechsel ---- */
+  const BASS = [
+    ['D3',1],['A3',1],['D3',1],['A3',1],   // D
+    ['G3',1],['D3',1],['G3',1],['D3',1],   // G
+    ['A2',1],['E3',1],['A2',1],['E3',1],   // A
+    ['D3',1],['A3',1],['D3',1],['A3',1],   // D
+    ['D3',1],['A3',1],['D3',1],['A3',1],   // D
+    ['G3',1],['D3',1],['G3',1],['D3',1],   // G
+    ['A2',1],['E3',1],['A2',1],['E3',1],   // A
+    ['D3',1],['A3',1],['D3',1],['F#3',1],  // D (kleine Wendung)
+  ];
+
+  /* ---- Stimmen ---- beide Sequenzen summieren sich auf 32 Schläge ---- */
+  const VOICES = [
+    { seq:MELODY, type:'square', cut:2800, peak:0.18, pluck:true  },
+    { seq:BASS,   type:'square', cut:850,  peak:0.15, pluck:false },
+  ];
+
+  /* ---- eine Note planen ---- */
+  function scheduleNote(v, name, time, beats){
     if(name === 'R' || !F[name]) return;
+    const dur = beats * SPB;
     const osc = ctx.createOscillator();
     const gn  = ctx.createGain();
     const lp  = ctx.createBiquadFilter();
-    osc.type = 'square';                 // Chiptune-Grundklang
+    osc.type = v.type;
     osc.frequency.value = F[name];
-    lp.type = 'lowpass';                 // nimmt die Schärfe (Flötenton)
-    lp.frequency.value = 1700;
-    const peak = 0.22;
-    // sanfte Hüllkurve, damit es nicht klickt
+    lp.type = 'lowpass';
+    lp.frequency.value = v.cut;
     gn.gain.setValueAtTime(0.0001, time);
-    gn.gain.exponentialRampToValueAtTime(peak, time + 0.02);
-    gn.gain.setValueAtTime(peak, time + dur * SPB * 0.65);
-    gn.gain.exponentialRampToValueAtTime(0.0001, time + dur * SPB * 0.98);
-    osc.connect(lp); lp.connect(gn); gn.connect(melodyMix);
-    osc.start(time);
-    osc.stop(time + dur * SPB + 0.05);
-  }
-
-  /* ---- Lookahead-Scheduler: plant Noten ~150 ms im Voraus ---- */
-  function scheduler(){
-    while(nextTime < ctx.currentTime + 0.15){
-      const [name, beats] = MELODY[step];
-      scheduleNote(name, nextTime, beats);
-      nextTime += beats * SPB;
-      step = (step + 1) % MELODY.length;   // nahtlose Schleife
+    gn.gain.exponentialRampToValueAtTime(v.peak, time + 0.008);   // schneller Anschlag
+    if(v.pluck){
+      // gezupfter Klang (Laute/Cembalo-Anmutung): kurzer Decay auf Sustain
+      gn.gain.exponentialRampToValueAtTime(v.peak * 0.4, time + Math.min(0.12, dur * 0.5));
+    } else {
+      // Bass: runder halten, dann am Ende ausblenden
+      gn.gain.exponentialRampToValueAtTime(v.peak * 0.7, time + dur * 0.6);
     }
+    gn.gain.exponentialRampToValueAtTime(0.0001, time + dur * 0.92);
+    osc.connect(lp); lp.connect(gn); gn.connect(master);
+    osc.start(time);
+    osc.stop(time + dur + 0.05);
   }
 
-  /* ---- Bordun (zwei dauerhafte Töne, Quinte D + A) ---- */
-  function startDrone(){
-    [F.D3, F.A3].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gn  = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.value = freq;
-      gn.gain.value = i === 0 ? 0.10 : 0.07;  // tiefer Ton etwas lauter
-      osc.connect(gn); gn.connect(master);
-      osc.start();
-      droneNodes.push(osc);
+  /* ---- Lookahead-Scheduler: plant je Stimme ~150 ms im Voraus ---- */
+  function scheduler(){
+    const horizon = ctx.currentTime + 0.15;
+    VOICES.forEach((v, vi) => {
+      const c = cursors[vi];
+      while(c.t < horizon){
+        const [name, beats] = v.seq[c.i];
+        scheduleNote(v, name, c.t, beats);
+        c.t += beats * SPB;
+        c.i = (c.i + 1) % v.seq.length;   // nahtlose Schleife
+      }
     });
   }
 
@@ -99,23 +109,18 @@
 
   /* ---- öffentlich: Musik starten (nur aus einer Nutzergeste!) ---- */
   function start(){
-    if(ctx){                       // schon initialisiert → ggf. fortsetzen
+    if(ctx){
       if(ctx.state === 'suspended') ctx.resume();
       return;
     }
     const AC = window.AudioContext || window.webkitAudioContext;
-    if(!AC) return;                // Browser ohne Web Audio: still scheitern
+    if(!AC) return;
     ctx = new AC();
     master = ctx.createGain();
     master.gain.value = enabled ? 0.5 : 0.0;
     master.connect(ctx.destination);
-    melodyMix = ctx.createGain();
-    melodyMix.gain.value = 1.0;
-    melodyMix.connect(master);
-    startDrone();
-    nextTime = ctx.currentTime + 0.1;
-    step = 0;
-    running = true;
+    const t0 = ctx.currentTime + 0.1;
+    cursors = VOICES.map(() => ({ i: 0, t: t0 }));
     scheduler();
     schedTimer = setInterval(scheduler, 60);
     updateButton();
@@ -125,7 +130,7 @@
   function toggle(){
     enabled = !enabled;
     localStorage.setItem(STORE_KEY, enabled ? 'an' : 'aus');
-    if(enabled && !ctx) start();   // beim ersten Einschalten initialisieren
+    if(enabled && !ctx) start();
     else if(enabled && ctx.state === 'suspended') ctx.resume();
     applyVolume();
     updateButton();
@@ -146,6 +151,5 @@
     state: () => (ctx ? ctx.state : 'none'),   // 'running' | 'suspended' | 'none'
   };
 
-  // Button-Beschriftung initialisieren, sobald das DOM steht
   window.addEventListener('DOMContentLoaded', updateButton);
 })();
