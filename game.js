@@ -472,6 +472,8 @@ function initTabs(){
 }
 
 function startGame(){
+  // Musik aus der Nutzergeste heraus starten (Browser-Autoplay-Regel)
+  if(window.KippoMusik) KippoMusik.start();
   newGame();
   $('title-screen').classList.add('hidden');
   $('game-screen').classList.remove('hidden');
@@ -488,6 +490,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   $('btn-plant').onclick=doPlant;
   $('btn-cow').onclick=doCow;
   $('btn-endturn').onclick=endTurn;
+  $('btn-music').onclick=()=>{ if(window.KippoMusik) KippoMusik.toggle(); };
   // delegierte Klicks für Bauen-Buttons
   $('build-list').addEventListener('click',e=>{
     const b=e.target.closest('[data-build]'); if(b) doBuild(b.dataset.build);
