@@ -2,6 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ IMPORTANT — Git workflow (mandatory)
+
+**Never commit features directly to `main`.** Every feature or change must be
+developed on its own **feature branch** and merged into `main` **via a Pull
+Request** — not via a local fast-forward or direct push.
+
+- Branch off `main`: `git checkout -b feature/<kurze-beschreibung>`
+- Commit the work there, push the branch, and open a PR (`gh pr create`).
+- `main` only ever advances through a merged PR.
+
+This applies even to small changes. Deployment is automatic: GitHub Pages
+rebuilds `main` on every merge, so unreviewed commits go straight to production.
+
+**Merge a PR into `main` as soon as its CI is green (the build passes).** Every
+PR runs the `CI` workflow (`.github/workflows/ci.yml`). When that check is
+green, merge the PR (`gh pr merge <n> --merge --delete-branch`). Never merge
+while checks are pending or failing, and never bypass them — a red build must be
+fixed first.
+
 ## What this is
 
 KIPPO — *Die Chronik von Kipshoven*: a browser-based pixel-art remake of the 1995
