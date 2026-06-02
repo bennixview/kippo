@@ -15,6 +15,12 @@ Request** — not via a local fast-forward or direct push.
 This applies even to small changes. Deployment is automatic: GitHub Pages
 rebuilds `main` on every merge, so unreviewed commits go straight to production.
 
+**Merge a PR into `main` as soon as its CI is green (the build passes).** Every
+PR runs the `CI` workflow (`.github/workflows/ci.yml`). When that check is
+green, merge the PR (`gh pr merge <n> --merge --delete-branch`). Never merge
+while checks are pending or failing, and never bypass them — a red build must be
+fixed first.
+
 ## What this is
 
 KIPPO — *Die Chronik von Kipshoven*: a browser-based pixel-art remake of the 1995
