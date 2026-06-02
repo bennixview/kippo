@@ -1,0 +1,52 @@
+name: CI
+
+# Läuft auf jedem Pull Request (Build-/Gültigkeits-Gate) und auf Pushes nach main.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Validierung
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JavaScript-Syntax prüfen
+        run: |
+          for f in *.js; do
+            echo "node --check $f"
+            node --check "$f"
+          done
+
+      - name: Lokale Assets vorhanden
+        run: |
+          set -e
+          for f in index.html style.css docs/titelbild.png \
+                   fonts/press-start-2p-latin.woff2 \
+                   fonts/press-start-2p-latin-ext.woff2 \
+                   fonts/OFL.txt; do
+            test -f "$f" || { echo "FEHLT: $f"; exit 1; }
+          done
+          echo "Alle Pflicht-Assets vorhanden."
+
+      - name: Keine externen Font-/CDN-Verweise (DSGVO-Guard)
+        run: |
+          if grep -RniE "fonts\.googleapis\.com|fonts\.gstatic\.com" index.html style.css; then
+            echo "Externer Google-Fonts-Verweis gefunden — Schrift muss lokal gehostet werden."
+            exit 1
+          fi
+          echo "Keine externen Font-CDN-Verweise."
+
+      - name: In index.html referenzierte lokale Dateien existieren
+        run: |
+          set -e
+          refs=$(grep -oE '(src|href)="[^"]+"' index.html \
+                 | sed -E 's/.*="([^"]+)"/\1/' \
+                 | grep -vE '^https?://')
+          for ref in $refs; do
+            test -f "$ref" || { echo "Referenz fehlt: $ref"; exit 1; }
+            echo "ok: $ref"
+          done
+          echo "Alle lokalen Referenzen aufgelöst."
