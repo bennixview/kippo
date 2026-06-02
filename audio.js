@@ -24,7 +24,7 @@
     'C#5':554.37, D5:587.33, E5:659.25,
   };
 
-  const TEMPO = 150;             // Schläge je Minute (flott, tänzerisch)
+  const TEMPO = 108;             // Schläge je Minute (entspannt — für langes Spielen)
   const SPB   = 60 / TEMPO;      // Sekunden je Schlag (Viertel)
 
   /* ---- Melodie [Ton, Schläge] ---- Achtel = 0.5 ----
