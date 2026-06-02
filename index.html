@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KIPPO — Die Chronik von Kipshoven</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ TITELBILDSCHIRM ============ -->
+<div id="title-screen" class="screen">
+  <canvas id="title-canvas" width="256" height="120"></canvas>
+  <h1 class="logo">KIPPO</h1>
+  <p class="subtitle">Die Chronik von Kipshoven</p>
+  <div class="title-story">
+    <p>Anno Domini 1380. Am Mühlenbach im Herzogtum Jülich liegt das kleine
+    Dorf <b>Kipshoven</b> — benannt nach dem Franken <b>Kippo</b>, der hier vor
+    langer Zeit den ersten Hof rodete.</p>
+    <p>Du bist sein Nachfahre und erbst nichts als eine windschiefe
+    Kötterkate, ein paar Morgen Land und den Namen deiner Ahnen.</p>
+    <p>Wirtschafte klug über die Generationen: vom Kötter zum Bauern, zum
+    Meier, zum Freiherrn auf dem Rittergut — bis zur <b>Wasserburg
+    Kipshoven</b>. Und wenn dein Geschlecht reich und fromm genug ist,
+    stiftest du im Jahre 1492 die <b>Heiligkreuzkapelle</b>, die noch heute
+    in Kipshoven steht.</p>
+  </div>
+  <button id="btn-start" class="btn btn-big">▶ Hof übernehmen</button>
+  <p class="credits">Pixel-Neuauflage des DOS-Spiels von Benjamin Wirtz (1995)</p>
+</div>
+
+<!-- ============ SPIELBILDSCHIRM ============ -->
+<div id="game-screen" class="screen hidden">
+
+  <!-- Statusleiste -->
+  <div id="statusbar">
+    <span class="stat"><b id="st-rank">Kötter</b></span>
+    <span class="stat">Anno <b id="st-year">1380</b></span>
+    <span class="stat">Geschl. <b id="st-gen">I</b></span>
+    <span class="stat" id="st-lord">Kippo</span>
+    <span class="stat">Alter <b id="st-age">25</b></span>
+    <span class="stat coin">💰 <b id="st-taler">80</b> Taler</span>
+  </div>
+
+  <div id="main-layout">
+
+    <!-- Linke Spalte: Pixel-Szene + Besitz -->
+    <div id="left-col">
+      <div class="panel scene-panel">
+        <canvas id="scene"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Besitz · Kipshoven</h3>
+        <div class="owned">
+          <span>🌲 Wald <b id="o-wald">4</b> M</span>
+          <span>🌿 Wiese <b id="o-wiese">3</b> M</span>
+          <span>🟫 Acker <b id="o-acker">5</b> M</span>
+          <span>🐄 Kühe <b id="o-cows">2</b></span>
+          <span>🪚 Sägew. <b id="o-saege">0</b></span>
+          <span>⚙️ Kornm. <b id="o-korn">0</b></span>
+          <span>🛢️ Ölm. <b id="o-oel">0</b></span>
+          <span>🪡 Webst. <b id="o-web">0</b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rechte Spalte: Aktionen -->
+    <div id="right-col">
+      <div class="tabs">
+        <button class="tab active" data-tab="land">🗺️ Land</button>
+        <button class="tab" data-tab="felder">🌾 Felder</button>
+        <button class="tab" data-tab="bauen">🏗️ Bauen</button>
+        <button class="tab" data-tab="vieh">🐄 Vieh</button>
+      </div>
+
+      <!-- LAND -->
+      <div class="tabpane active" id="tab-land">
+        <p class="market">Marktpreise je Morgen: 🌲 <b id="p-wald">–</b> · 🌿 <b id="p-wiese">–</b> · 🟫 <b id="p-acker">–</b> Taler</p>
+        <table class="trade">
+          <tr><th></th><th>Wald</th><th>Wiese</th><th>Acker</th></tr>
+          <tr>
+            <td>Kaufen</td>
+            <td><input type="number" id="buy-wald" min="0" value="0"></td>
+            <td><input type="number" id="buy-wiese" min="0" value="0"></td>
+            <td><input type="number" id="buy-acker" min="0" value="0"></td>
+          </tr>
+          <tr>
+            <td>Verkaufen</td>
+            <td><input type="number" id="sell-wald" min="0" value="0"></td>
+            <td><input type="number" id="sell-wiese" min="0" value="0"></td>
+            <td><input type="number" id="sell-acker" min="0" value="0"></td>
+          </tr>
+        </table>
+        <button class="btn" id="btn-land">Handel ausführen</button>
+        <p class="hint">Wald nährt Sägewerke, Wiese die Kühe, Acker die Saat. Land ist die Grundlage allen Reichtums.</p>
+      </div>
+
+      <!-- FELDER -->
+      <div class="tabpane" id="tab-felder">
+        <p class="market">Freier Acker zum Bestellen: <b id="acker-free">5</b> Morgen</p>
+        <table class="trade" id="crop-table">
+          <tr><th>Frucht</th><th>Ertrag</th><th>Morgen</th></tr>
+        </table>
+        <button class="btn" id="btn-plant">Aussaat festlegen</button>
+        <p class="hint">Flachs bringt Leinsamen (→ Ölmühle = Leinöl) und Leinen (→ Webstube = Tuch). Roggen ist der treue Brotgeber des Niederrheins.</p>
+      </div>
+
+      <!-- BAUEN -->
+      <div class="tabpane" id="tab-bauen">
+        <div id="build-list"></div>
+        <hr>
+        <div id="rank-upgrade"></div>
+      </div>
+
+      <!-- VIEH -->
+      <div class="tabpane" id="tab-vieh">
+        <p class="market">Kuhpreis dieses Jahr: <b id="p-cow">–</b> Taler · schwankt 400–900</p>
+        <div class="trade-row">
+          <label>🐄 Kühe kaufen <input type="number" id="buy-cow" min="0" value="0"></label>
+          <label>🐄 Kühe verkaufen <input type="number" id="sell-cow" min="0" value="0"></label>
+        </div>
+        <button class="btn" id="btn-cow">Viehhandel ausführen</button>
+        <p class="hint">Jede Kuh braucht eine Morgen Wiese, sonst kümmert sie. Kühe geben Milch und Kälber — und der Preis schwankt für kühne Händler.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chronik + Zugende -->
+  <div id="bottombar">
+    <div id="chronik" class="panel">
+      <h3>Chronik</h3>
+      <ul id="log"></ul>
+    </div>
+    <button id="btn-endturn" class="btn btn-big">Jahr abschließen ▶</button>
+  </div>
+</div>
+
+<!-- ============ OVERLAY (Ereignis / Sieg / Tod) ============ -->
+<div id="overlay" class="hidden">
+  <div id="overlay-box">
+    <canvas id="overlay-canvas" width="200" height="120" class="hidden"></canvas>
+    <h2 id="overlay-title"></h2>
+    <p id="overlay-text"></p>
+    <button id="overlay-btn" class="btn btn-big">Weiter</button>
+  </div>
+</div>
+
+<script src="scene.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

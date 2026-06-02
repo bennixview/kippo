@@ -1,0 +1,197 @@
+/* ============================================================
+   KIPPO — Die Chronik von Kipshoven
+   Retro-Pixel-Optik (C64/NES-Anmutung)
+   ============================================================ */
+
+:root{
+  --bg:        #1a1228;   /* tiefes Nachtviolett */
+  --bg2:       #2a1d3d;
+  --panel:     #3b2a1a;   /* dunkles Holz/Pergament */
+  --panel2:    #503a24;
+  --ink:       #f4e4c1;   /* Pergamenttinte */
+  --ink-dim:   #c9b487;
+  --gold:      #ffcc44;
+  --green:     #6abe30;
+  --red:       #d04648;
+  --blue:      #4a7fd8;
+  --shadow:    #0d0a14;
+  --frame:     #8a6a3a;
+}
+
+*{ box-sizing:border-box; }
+
+html,body{
+  margin:0; padding:0;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 4px), /* scanlines */
+    radial-gradient(circle at 50% 0%, var(--bg2), var(--bg) 70%);
+  color:var(--ink);
+  font-family:'Press Start 2P', 'Courier New', monospace;
+  font-size:11px;
+  line-height:1.7;
+  image-rendering:pixelated;
+  -webkit-font-smoothing:none;
+  min-height:100vh;
+}
+
+b{ color:var(--gold); }
+h2,h3{ color:var(--gold); margin:0 0 8px; font-weight:normal; }
+h3{ font-size:11px; border-bottom:2px solid var(--frame); padding-bottom:5px; }
+hr{ border:none; border-top:2px dashed var(--frame); margin:12px 0; }
+
+/* ---------- Screens ---------- */
+.screen{ max-width:1080px; margin:0 auto; padding:16px; }
+.hidden{ display:none !important; }
+
+/* ---------- Pixel-Panel ---------- */
+.panel{
+  background:var(--panel);
+  border:3px solid var(--frame);
+  box-shadow: inset -3px -3px 0 var(--shadow), inset 3px 3px 0 var(--panel2), 0 0 0 3px var(--shadow);
+  padding:12px;
+  margin-bottom:12px;
+}
+
+/* ---------- Buttons ---------- */
+.btn{
+  font-family:inherit; font-size:11px;
+  color:var(--bg); background:var(--gold);
+  border:none;
+  padding:10px 14px;
+  cursor:pointer;
+  box-shadow: inset -3px -3px 0 #b8860b, inset 3px 3px 0 #ffe9a0;
+  text-transform:uppercase;
+}
+.btn:hover{ background:#ffd866; }
+.btn:active{ box-shadow: inset 3px 3px 0 #b8860b, inset -3px -3px 0 #ffe9a0; transform:translate(1px,1px); }
+.btn-big{ display:block; width:100%; padding:14px; font-size:13px; margin-top:8px; }
+.btn.disabled,.btn:disabled{ background:#6b5d44; color:#3a3225; box-shadow:inset -3px -3px 0 #4a3f30, inset 3px 3px 0 #7d6e52; cursor:not-allowed; }
+
+/* ============ TITELBILDSCHIRM ============ */
+#title-screen{ text-align:center; padding-top:24px; }
+#title-canvas{ width:512px; max-width:90%; image-rendering:pixelated; image-rendering:crisp-edges; margin-bottom:4px; }
+.logo{
+  font-size:54px; color:var(--gold); margin:0; letter-spacing:6px;
+  text-shadow:4px 4px 0 var(--red), 8px 8px 0 var(--shadow);
+}
+.subtitle{ color:var(--green); font-size:13px; margin:6px 0 18px; }
+.title-story{
+  max-width:620px; margin:0 auto 18px; text-align:left;
+  background:var(--panel); border:3px solid var(--frame);
+  box-shadow: inset -3px -3px 0 var(--shadow), inset 3px 3px 0 var(--panel2);
+  padding:16px; line-height:1.9;
+}
+.title-story p{ margin:0 0 12px; }
+.credits{ color:var(--ink-dim); font-size:9px; margin-top:14px; }
+#title-screen .btn-big{ max-width:340px; margin:0 auto; }
+
+/* ============ STATUSLEISTE ============ */
+#statusbar{
+  display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center;
+  background:var(--bg2); border:3px solid var(--frame);
+  box-shadow:inset -3px -3px 0 var(--shadow), inset 3px 3px 0 var(--panel2);
+  padding:10px 14px; margin-bottom:12px;
+}
+.stat{ white-space:nowrap; }
+.stat.coin{ margin-left:auto; color:var(--gold); }
+
+/* ============ LAYOUT ============ */
+#main-layout{ display:flex; gap:12px; align-items:flex-start; }
+#left-col{ flex:1 1 56%; min-width:0; }
+#right-col{ flex:1 1 44%; min-width:0; }
+
+.scene-panel{ padding:6px; }
+#scene{
+  width:100%; display:block;
+  image-rendering:pixelated; image-rendering:crisp-edges;
+  background:#0d0a14;
+}
+
+.owned{ display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; }
+.owned span{ font-size:10px; }
+
+/* ============ TABS ============ */
+.tabs{ display:flex; gap:4px; margin-bottom:-3px; position:relative; z-index:2; }
+.tab{
+  font-family:inherit; font-size:10px; cursor:pointer;
+  background:var(--panel); color:var(--ink-dim);
+  border:3px solid var(--frame); border-bottom:none;
+  padding:9px 8px; flex:1;
+}
+.tab.active{ background:var(--panel2); color:var(--gold); }
+.tabpane{
+  display:none;
+  background:var(--panel2);
+  border:3px solid var(--frame);
+  box-shadow: inset -3px -3px 0 var(--shadow);
+  padding:14px; min-height:300px;
+}
+.tabpane.active{ display:block; }
+
+.market{ color:var(--green); font-size:10px; margin:0 0 12px; }
+.hint{ color:var(--ink-dim); font-size:9px; line-height:1.8; margin-top:14px; }
+
+/* ---------- Trade tables ---------- */
+table.trade{ width:100%; border-collapse:collapse; margin-bottom:12px; }
+table.trade th{ color:var(--gold); font-weight:normal; font-size:10px; padding:4px; }
+table.trade td{ padding:4px; text-align:center; font-size:10px; }
+table.trade input{
+  width:54px; font-family:inherit; font-size:11px; text-align:center;
+  background:var(--bg); color:var(--ink); border:2px solid var(--frame);
+  padding:4px;
+}
+.trade-row{ display:flex; flex-direction:column; gap:10px; margin-bottom:12px; }
+.trade-row input{
+  width:60px; font-family:inherit; font-size:11px; text-align:center;
+  background:var(--bg); color:var(--ink); border:2px solid var(--frame); padding:4px; margin-left:6px;
+}
+
+/* ---------- Build list ---------- */
+.build-item{
+  border:2px solid var(--frame); padding:8px 10px; margin-bottom:8px;
+  background:var(--panel); display:flex; justify-content:space-between; align-items:center; gap:8px;
+}
+.build-item .bi-info{ flex:1; }
+.build-item .bi-name{ color:var(--gold); }
+.build-item .bi-desc{ font-size:9px; color:var(--ink-dim); line-height:1.7; }
+.build-item .btn{ font-size:9px; padding:8px 10px; white-space:nowrap; }
+#rank-upgrade .build-item{ border-color:var(--gold); flex-direction:column; align-items:stretch; }
+#rank-upgrade .btn{ white-space:normal; margin-top:8px; }
+.build-item .bi-info{ min-width:0; }
+
+/* ============ CHRONIK / BOTTOM ============ */
+#bottombar{ display:flex; gap:12px; align-items:stretch; margin-top:4px; }
+#chronik{ flex:1; max-height:170px; overflow-y:auto; margin:0; }
+#chronik ul{ list-style:none; margin:0; padding:0; }
+#chronik li{ font-size:10px; padding:3px 0; border-bottom:1px dotted #5a472c; line-height:1.6; }
+#chronik li.good{ color:var(--green); }
+#chronik li.bad{ color:var(--red); }
+#chronik li.epic{ color:var(--gold); }
+#btn-endturn{ flex:0 0 200px; align-self:center; margin:0; }
+
+/* ============ OVERLAY ============ */
+#overlay{
+  position:fixed; inset:0; background:rgba(13,10,20,0.88);
+  display:flex; align-items:center; justify-content:center; z-index:50;
+}
+#overlay-box{
+  background:var(--panel); border:4px solid var(--gold);
+  box-shadow:0 0 0 4px var(--shadow), 0 0 40px rgba(255,204,68,0.3);
+  padding:24px; max-width:480px; text-align:center;
+}
+#overlay-canvas{ width:400px; max-width:100%; image-rendering:pixelated; margin-bottom:12px; }
+#overlay-text{ line-height:2; margin:8px 0 18px; }
+
+/* ---------- Responsive ---------- */
+@media(max-width:760px){
+  #main-layout{ flex-direction:column; }
+  #left-col,#right-col{ flex:1 1 auto; width:100%; }
+  #bottombar{ flex-direction:column; }
+  #btn-endturn{ flex:none; }
+  .logo{ font-size:36px; }
+}
+
+/* dünne Scrollbar */
+#chronik::-webkit-scrollbar{ width:10px; }
+#chronik::-webkit-scrollbar-thumb{ background:var(--frame); }
+#chronik::-webkit-scrollbar-track{ background:var(--bg); }
